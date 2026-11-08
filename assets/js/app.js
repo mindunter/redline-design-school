@@ -117,12 +117,12 @@ function viewHome(){
   const gallery = ALL.flatMap(l => imgsFor(l).map(im => ({...im, l})));
   return `<div class="wrap">
   <section class="hero" aria-labelledby="h1">
-    <div class="hero-copy"><span class="eyebrow">Free course · ${COURSE.length} modules · ${ALL.length} lessons · ${ALL.length} labs</span>
+    <div class="hero-copy"><span class="eyebrow">Free course · ${ALL.length} lessons · ${ALL.length} labs</span>
       <h1 id="h1">Learn product design <em>to spec.</em></h1>
       <p class="lead">From user interviews to a portfolio case study. Every lesson pairs a deep, cited read with a hands-on lab, a practice brief and a quiz, all building one capstone project.</p>
       <div class="cta">${nx ? `<a class="btn primary" href="#/lesson/${nx.id}">${started ? "Continue" : "Start lesson 1"} →</a>` : `<a class="btn primary" href="#/lesson/capstone">Revisit the capstone →</a>`}<a class="btn" href="#/learn">See the curriculum</a></div></div>
-    <div class="hero-art" aria-hidden="true"><div class="spec-card"><div class="ph"></div><div class="ln"></div><div class="ln s"></div><div class="b"></div></div>
-      <span class="meas h">320</span><span class="meas v">400</span><span class="meas p">padding 24</span><span class="cursor">${I.cursor}</span></div>
+    <div class="hero-art" aria-hidden="true"><div class="spec-wrap"><div class="spec-card"><div class="ph"></div><div class="ln"></div><div class="ln s"></div><div class="b"></div></div>
+      <span class="meas h">320</span><span class="meas v">400</span><span class="meas p">padding 18</span><span class="cursor">${I.cursor}</span></div></div>
   </section>
   ${started && nx ? `<a class="continue" href="#/lesson/${nx.id}"><svg class="mini" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="none" stroke="var(--line)" stroke-width="4"/><circle cx="18" cy="18" r="15" fill="none" stroke="var(--red)" stroke-width="4" stroke-dasharray="${(d / ALL.length * 94.2).toFixed(1)} 94.2" transform="rotate(-90 18 18)"/></svg>
     <div><span class="eyebrow">Pick up where you left off · Module ${pad(nx.mi + 1)}</span><h3>${esc(nx.title)}</h3><span class="muted" style="font-size:14px">${nx.mins} min · Lab: ${esc(nx.labTitle)}</span></div><span class="btn primary go">Continue</span></a>` : ""}
@@ -148,10 +148,10 @@ function viewLearn(){
     <p class="sum">Work through in order for the full arc, from understanding people to shipping and presenting work. Each lesson builds part of the same meal-planning project.</p></header>
   ${COURSE.map((m, mi) => `<section style="display:grid;gap:12px" aria-labelledby="m-${m.id}"><div class="sec-h" style="border-color:${m.color}"><h2 id="m-${m.id}"><span class="mono" style="color:${m.color};font-size:14px;margin-right:10px">${pad(mi + 1)}</span>${esc(m.title)}</h2><span class="mono muted">${modDone(m)}/${m.lessons.length} complete</span></div>
     <p class="muted" style="max-width:70ch">${esc(m.blurb)}</p>
-    <div class="cards">${m.lessons.map((l, li) => `<a href="#/lesson/${l.id}" class="continue" style="border-left-color:${S.done[l.id] ? "var(--ok)" : m.color};grid-template-columns:auto minmax(0,1fr) auto">
-      <span class="mono" style="font-size:13px;color:${m.color}">${mi + 1}.${li + 1}</span><div style="display:grid;gap:4px"><h3 style="font-size:18px">${esc(l.title)}</h3><span class="muted" style="font-size:14px;line-height:1.45">${esc(l.summary)}</span>
+    <div class="cards">${m.lessons.map((l, li) => `<a href="#/lesson/${l.id}" class="lrow" style="--c:${S.done[l.id] ? "var(--ok)" : m.color}">
+      <span class="num">${mi + 1}.${li + 1}</span><div class="body"><h3>${esc(l.title)}</h3><span class="muted" style="font-size:14px;line-height:1.45">${esc(l.summary)}</span>
       <div class="chips"><span class="chip">${l.mins} min</span><span class="chip">${l.level}</span><span class="chip red">Lab: ${esc(l.labTitle)}</span></div></div>
-      ${S.done[l.id] ? '<span class="chip ok">✓ Done</span>' : '<span class="chip">Start</span>'}</a>`).join("")}</div></section>`).join("")}${footer()}</div>`;
+      <span class="status">${S.done[l.id] ? '<span class="chip ok">✓ Done</span>' : '<span class="chip go">Start →</span>'}</span></a>`).join("")}</div></section>`).join("")}${footer()}</div>`;
 }
 
 function viewLesson(l){
@@ -255,11 +255,20 @@ function mountProgress(){
   $("#resetYes").onclick = () => { S = {done: {}, practice: {}, quiz: {}, notes: {}, labs: {}, last: null, days: [], closed: {}}; save(); toast("Progress reset"); route(); };
 }
 
+/* Tables become stacked cards on phones; tables with merged cells keep sideways scrolling. */
+function stackTables(){
+  $$(".tbl", main).forEach(t => { const tb = $("table", t); if (!tb || t.closest(".lab") || $("[rowspan],[colspan]", tb)) return;
+    const heads = $$("thead th", tb).map(th => th.textContent.trim());
+    $$("tbody tr", tb).forEach(tr => $$("td", tr).forEach((td, i) => td.setAttribute("data-label", heads[i] || "")));
+    t.classList.add("stack"); });
+}
+
 /* ── router ── */
 function route(){
   cleanups.forEach(f => f()); cleanups = []; closeDrawer();
   const h = location.hash.replace(/^#\/?/, ""), [view, a, b] = h.split("/");
   let lesson = view === "lesson" ? byId[a] : byId[view]; // old "#lesson-id" links still work
+  shell.classList.toggle("no-rail", !lesson);
   if (!view || view === "home") { renderRail(null); main.innerHTML = viewHome(); document.title = "Redline Design School"; }
   else if (lesson) { renderRail(lesson.id); main.innerHTML = viewLesson(lesson); document.title = `${lesson.title} · Redline Design School`; mountLesson(lesson); }
   else if (view === "learn") { renderRail(null); main.innerHTML = viewLearn(); document.title = "Curriculum · Redline Design School"; }
@@ -268,7 +277,7 @@ function route(){
   else { renderRail(null); main.innerHTML = `<div class="wrap"><h1>Page not found</h1><p>That page doesn't exist. <a href="#/">Go to the home page</a>.</p></div>`; }
   $$("[data-nav]").forEach(x => { if (x.dataset.nav === view) x.setAttribute("aria-current", "page"); else x.removeAttribute("aria-current"); });
   $$("[data-tab]").forEach(x => { const on = (x.dataset.tab === "home" && !view) || x.dataset.tab === view || (x.dataset.tab === "learn" && !!lesson); if (on) x.setAttribute("aria-current", "page"); else x.removeAttribute("aria-current"); });
-  ring();
+  ring(); stackTables();
   const target = lesson && b ? document.getElementById(b) : null;
   if (target) setTimeout(() => target.scrollIntoView({block: "start"}), 20); else if (!(view === "glossary" && a)) window.scrollTo(0, 0);
 }

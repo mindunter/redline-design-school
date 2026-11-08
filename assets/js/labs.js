@@ -148,13 +148,13 @@ LABS.affinity = (el) => {
     ["Gets home at 7 pm", 2], ["Wants dinner decided in a minute", 2], ["Orders takeout when tired", 2], ["Kids need to eat by 7:30", 2]]);
   let sel = null;
   el.innerHTML = `<p class="muted" style="font-size:14px;margin-bottom:12px">Tap a note, then tap a cluster. On desktop you can also drag.</p>
-    <div class="aff-pool" data-g="-1" style="display:flex;flex-wrap:wrap;gap:8px;padding:12px;border:1px dashed var(--line-2);border-radius:10px;min-height:64px"></div>
+    <div class="aff-pool" data-g="-1" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,160px),1fr));gap:8px;padding:12px;border:1px dashed var(--line-2);border-radius:10px;min-height:64px"></div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;margin-top:12px">${G.map((g, i) => `<div class="aff-col panel" data-g="${i}" style="min-height:140px;display:flex;flex-direction:column;gap:8px"><b style="font-family:var(--f-display);font-size:16px">${g}</b></div>`).join("")}</div>
     <div class="row" style="margin-top:14px"><button class="btn sm primary" type="button" id="af-check">Check my map</button><button class="btn sm ghost" type="button" id="af-reset">Reset</button><span class="score-line" id="af-score" aria-live="polite"></span></div>`;
   const colors = ["#FFF3B0", "#FFD6E5", "#CFE8FF"];
   const pool = $(".aff-pool", el);
   N.forEach(([t, g], i) => { const b = document.createElement("button"); b.type = "button"; b.className = "aff-note"; b.draggable = true; b.dataset.i = i; b.dataset.g = g; b.textContent = t;
-    b.style.cssText = `background:${colors[i % 3]};color:#1a1a1a;border:1px solid rgba(0,0,0,.08);border-radius:4px;padding:10px;font-size:13.5px;line-height:1.3;text-align:left;max-width:200px;box-shadow:0 1px 2px rgba(0,0,0,.08);min-height:44px`;
+    b.style.cssText = `background:${colors[i % 3]};color:#1a1a1a;border:1px solid rgba(0,0,0,.08);border-radius:4px;padding:10px 12px;font-size:13.5px;line-height:1.35;text-align:left;width:100%;box-shadow:0 1px 2px rgba(0,0,0,.08);min-height:56px;display:flex;align-items:center`;
     pool.appendChild(b); });
   const mark = b => { $$(".aff-note", el).forEach(n => n.style.outline = ""); sel = b; if (b) b.style.outline = "2px solid var(--red)"; };
   el.addEventListener("click", e => {
@@ -188,8 +188,8 @@ LABS.heart = (el, ctx) => {
     R: ["People keep planning", "Active planners in consecutive months", "% of this month's planners active 3 months later"],
     T: ["Planning a week is quick", "Time from opening to saved plan", "Median time to save a plan; % of sessions abandoned"]};
   const st = ctx.get() || {on: ["T","A"], rows: {}};
-  el.innerHTML = `<div class="row" style="margin-bottom:14px"><span class="lbl">Feature: weekly meal plan</span><div class="seg" role="group" aria-label="HEART categories">${K.map(([k, n]) => `<button type="button" data-k="${k}" aria-pressed="false">${n}</button>`).join("")}</div>
-    <button class="btn sm ghost" type="button" id="ht-ex">Fill examples</button></div><div id="ht-rows" class="cards"></div>`;
+  el.innerHTML = `<div style="display:grid;gap:10px;margin-bottom:16px"><div class="row" style="justify-content:space-between"><span class="lbl">Feature: weekly meal plan</span><button class="btn sm" type="button" id="ht-ex">Fill examples</button></div>
+    <div class="seg" role="group" aria-label="HEART categories" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,110px),1fr))">${K.map(([k, n]) => `<button type="button" data-k="${k}" aria-pressed="false">${n}</button>`).join("")}</div></div><div id="ht-rows" class="cards"></div>`;
   const draw = () => {
     $$(".seg button", el).forEach(b => b.setAttribute("aria-pressed", String(st.on.includes(b.dataset.k))));
     $("#ht-rows", el).innerHTML = st.on.length ? K.filter(([k]) => st.on.includes(k)).map(([k, n]) => { const r = st.rows[k] || ["","",""];
@@ -210,33 +210,42 @@ LABS.heart = (el, ctx) => {
 /* 9 ─ RICE */
 LABS.rice = (el, ctx) => {
   const st = ctx.get() || {ideas: [["Fridge-based suggestions", 800, 2, 0.5, 3], ["Save recipes from any link", 1200, 1, 0.8, 1], ["Shared family plan", 300, 2, 0.8, 2], ["Dark mode", 2000, 0.25, 1, 0.5]]};
-  const IMP = [[3,"3 massive"],[2,"2 high"],[1,"1 medium"],[0.5,"0.5 low"],[0.25,"0.25 minimal"]], CONF = [[1,"100%"],[0.8,"80%"],[0.5,"50%"]];
-  el.innerHTML = `<div class="tbl"><table style="min-width:640px"><thead><tr><th>Idea</th><th>Reach / qtr</th><th>Impact</th><th>Confidence</th><th>Effort (person-months)</th><th>Score</th><th></th></tr></thead><tbody id="rc-b"></tbody></table></div>
-    <div class="row" style="margin:12px 0 18px"><button class="btn sm" type="button" id="rc-add">Add idea</button><span class="muted" style="font-size:13.5px">Score = Reach × Impact × Confidence ÷ Effort</span></div>
-    <div class="lab-grid"><div class="panel"><div class="lbl" style="margin-bottom:8px">Ranking</div><ol id="rc-rank" style="margin:0;padding-left:1.2em;display:grid;gap:6px"></ol></div>
+  const IMP = [[3,"3 · massive"],[2,"2 · high"],[1,"1 · medium"],[0.5,"0.5 · low"],[0.25,"0.25 · minimal"]], CONF = [[1,"100% · high"],[0.8,"80% · medium"],[0.5,"50% · low"]];
+  el.innerHTML = `<div id="rc-b" class="cards"></div>
+    <div class="row" style="margin:12px 0 18px;justify-content:space-between"><button class="btn sm" type="button" id="rc-add">Add idea</button><span class="mono muted" style="font-size:12px">Score = Reach × Impact × Confidence ÷ Effort</span></div>
+    <div class="lab-grid"><div class="panel"><div class="lbl" style="margin-bottom:10px">Ranking</div><ol id="rc-rank" style="margin:0;padding:0;list-style:none;display:grid;gap:8px"></ol></div>
     <div class="panel"><div class="lbl">Value vs. effort</div><svg id="rc-svg" viewBox="0 0 320 240" width="100%" role="img" aria-label="Scatter plot of value against effort"></svg></div></div>`;
-  const sel = (opts, v, f) => `<select data-f="${f}" aria-label="${f === 2 ? "Impact" : "Confidence"}">${opts.map(([x, l]) => `<option value="${x}" ${+v === x ? "selected" : ""}>${l}</option>`).join("")}</select>`;
+  const sel = (opts, v, f, label) => `<select data-f="${f}" aria-label="${label}">${opts.map(([x, l]) => `<option value="${x}" ${+v === x ? "selected" : ""}>${l}</option>`).join("")}</select>`;
   const score = r => r[4] > 0 ? r[1] * r[2] * r[3] / r[4] : 0;
   const draw = () => {
-    $("#rc-b", el).innerHTML = st.ideas.map((r, i) => `<tr data-i="${i}"><td><input type="text" data-f="0" value="${esc(r[0])}" aria-label="Idea name"></td><td><input type="number" min="0" data-f="1" value="${r[1]}" aria-label="Reach"></td>
-      <td>${sel(IMP, r[2], 2)}</td><td>${sel(CONF, r[3], 3)}</td><td><input type="number" min="0.5" step="0.5" data-f="4" value="${r[4]}" aria-label="Effort"></td><td class="mono" data-score style="font-size:14px;font-weight:600"></td><td><button class="iconbtn" data-del aria-label="Remove idea" type="button">✕</button></td></tr>`).join("");
+    $("#rc-b", el).innerHTML = st.ideas.map((r, i) => `<div class="qcard" data-i="${i}">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center"><input type="text" data-f="0" value="${esc(r[0])}" aria-label="Idea name" style="font-weight:600">
+        <span style="text-align:right"><span class="lbl" style="display:block;font-size:10px">Score</span><b class="mono" data-score style="font-size:18px"></b></span><button class="iconbtn" data-del aria-label="Remove ${esc(r[0])}" type="button">✕</button></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr));gap:10px;align-items:end">
+        <div class="field"><label>Reach / quarter</label><input type="number" min="0" data-f="1" value="${r[1]}" aria-label="Reach per quarter"></div>
+        <div class="field"><label>Impact</label>${sel(IMP, r[2], 2, "Impact")}</div>
+        <div class="field"><label>Confidence</label>${sel(CONF, r[3], 3, "Confidence")}</div>
+        <div class="field"><label>Effort (person-months)</label><input type="number" min="0.5" step="0.5" data-f="4" value="${r[4]}" aria-label="Effort in person-months"></div></div></div>`).join("");
     upd();
   };
   const upd = () => {
-    $$("#rc-b tr", el).forEach(tr => { $("[data-score]", tr).textContent = Math.round(score(st.ideas[+tr.dataset.i])); });
+    $$("#rc-b .qcard", el).forEach(c => { $("[data-score]", c).textContent = Math.round(score(st.ideas[+c.dataset.i])); });
     const ranked = st.ideas.map((r, i) => [r, score(r)]).sort((a, b) => b[1] - a[1]);
-    $("#rc-rank", el).innerHTML = ranked.map(([r, s]) => `<li><b>${esc(r[0] || "Untitled")}</b> <span class="mono muted">${Math.round(s)}</span></li>`).join("");
+    $("#rc-rank", el).innerHTML = ranked.map(([r, s], i) => `<li style="display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:baseline"><span class="mono" style="color:var(--red)">${i + 1}</span><b style="min-width:0">${esc(r[0] || "Untitled")}</b><span class="mono muted">${Math.round(s)}</span></li>`).join("");
     const maxV = Math.max(1, ...st.ideas.map(r => r[1] * r[2] * r[3])), maxE = Math.max(1, ...st.ideas.map(r => r[4]));
-    const X = e => 40 + e / maxE * 260, Y = v => 200 - v / maxV * 180;
-    $("#rc-svg", el).innerHTML = `<rect x="40" y="20" width="130" height="90" fill="var(--ok-soft)"/><text x="46" y="34" font-size="10" fill="var(--ok)">QUICK WINS</text><text x="294" y="34" font-size="10" text-anchor="end" fill="var(--muted)">BIG BETS</text><text x="294" y="194" font-size="10" text-anchor="end" fill="var(--muted)">MONEY PITS</text>
-      <line x1="40" y1="200" x2="300" y2="200" stroke="var(--line-2)"/><line x1="40" y1="20" x2="40" y2="200" stroke="var(--line-2)"/><line x1="170" y1="20" x2="170" y2="200" stroke="var(--line)" stroke-dasharray="3 3"/><line x1="40" y1="110" x2="300" y2="110" stroke="var(--line)" stroke-dasharray="3 3"/>
-      <text x="170" y="222" font-size="10" text-anchor="middle" fill="var(--muted)">Effort →</text><text x="14" y="110" font-size="10" fill="var(--muted)" transform="rotate(-90 14 110)" text-anchor="middle">Reach × Impact × Conf →</text>
-      ${st.ideas.map(r => `<circle cx="${X(r[4])}" cy="${Y(r[1] * r[2] * r[3])}" r="6" fill="var(--red)"/><text x="${Math.min(X(r[4]) + 9, 250)}" y="${Y(r[1] * r[2] * r[3]) + 4}" font-size="10" fill="var(--ink)">${esc((r[0] || "").slice(0, 18))}</text>`).join("")}`;
+    const X = e => 40 + e / maxE * 250, Y = v => 196 - v / maxV * 170, placed = [];
+    const labels = st.ideas.map(r => { const x = X(r[4]), y = Y(r[1] * r[2] * r[3]), left = x > 170, nm = r[0] || "", t = nm.length > 16 ? nm.slice(0, 15) + "…" : nm, w = t.length * 6;
+      let ly = y + 3.5; const x0 = left ? x - 10 - w : x + 10;
+      while (placed.some(p => Math.abs(p.y - ly) < 12 && x0 < p.x0 + p.w && p.x0 < x0 + w)) ly += 12;
+      placed.push({x0, w, y: ly}); return `<circle cx="${x}" cy="${y}" r="6" fill="var(--red)"/><text x="${left ? x - 10 : x + 10}" y="${ly}" text-anchor="${left ? "end" : "start"}" font-size="10" fill="var(--ink)">${esc(t)}</text>`; });
+    $("#rc-svg", el).innerHTML = `<rect x="40" y="26" width="125" height="85" fill="var(--ok-soft)"/><text x="46" y="40" font-size="10" fill="var(--ok)">QUICK WINS</text><text x="290" y="40" font-size="10" text-anchor="end" fill="var(--muted)">BIG BETS</text><text x="290" y="190" font-size="10" text-anchor="end" fill="var(--muted)">MONEY PITS</text>
+      <line x1="40" y1="196" x2="290" y2="196" stroke="var(--line-2)"/><line x1="40" y1="26" x2="40" y2="196" stroke="var(--line-2)"/><line x1="165" y1="26" x2="165" y2="196" stroke="var(--line)" stroke-dasharray="3 3"/><line x1="40" y1="111" x2="290" y2="111" stroke="var(--line)" stroke-dasharray="3 3"/>
+      <text x="165" y="218" font-size="10" text-anchor="middle" fill="var(--muted)">Effort →</text><text x="16" y="111" font-size="10" fill="var(--muted)" transform="rotate(-90 16 111)" text-anchor="middle">Value →</text>${labels.join("")}`;
     ctx.set(st);
   };
-  el.addEventListener("input", e => { const tr = e.target.closest("tr[data-i]"); if (!tr) return; const f = +e.target.dataset.f; st.ideas[+tr.dataset.i][f] = f === 0 ? e.target.value : +e.target.value || 0; upd(); });
-  el.addEventListener("change", e => { if (e.target.tagName === "SELECT") { const tr = e.target.closest("tr"); st.ideas[+tr.dataset.i][+e.target.dataset.f] = +e.target.value; upd(); } });
-  el.addEventListener("click", e => { if (e.target.closest("[data-del]")) { st.ideas.splice(+e.target.closest("tr").dataset.i, 1); draw(); } });
+  el.addEventListener("input", e => { const c = e.target.closest(".qcard[data-i]"); if (!c || e.target.tagName === "SELECT") return; const f = +e.target.dataset.f; st.ideas[+c.dataset.i][f] = f === 0 ? e.target.value : +e.target.value || 0; upd(); });
+  el.addEventListener("change", e => { if (e.target.tagName !== "SELECT") return; const c = e.target.closest(".qcard"); st.ideas[+c.dataset.i][+e.target.dataset.f] = +e.target.value; upd(); });
+  el.addEventListener("click", e => { if (e.target.closest("[data-del]")) { st.ideas.splice(+e.target.closest(".qcard").dataset.i, 1); draw(); } });
   $("#rc-add", el).onclick = () => { st.ideas.push(["New idea", 500, 1, 0.8, 1]); draw(); };
   draw();
 };
@@ -275,17 +284,17 @@ LABS.treetest = (el) => {
 /* 11 ─ Journey emotion line */
 LABS.journey = (el, ctx) => {
   const PH = ["Decide", "Shop", "Cook", "Eat", "Reflect"], v = ctx.get() || [0, -2, -1, 2, 1];
-  el.innerHTML = `<svg viewBox="0 0 520 220" width="100%" style="max-height:260px" role="img" aria-label="Emotion curve across journey phases"></svg>
+  el.innerHTML = `<svg viewBox="0 0 520 224" width="100%" role="img" aria-label="Emotion curve across journey phases (higher is more positive)"></svg>
     <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:8px">${PH.map((p, i) => `<div class="field" style="align-items:center;text-align:center"><label for="jm-${i}">${p}</label>
     <input type="range" id="jm-${i}" min="-3" max="3" value="${v[i]}" aria-label="${p} feeling" style="writing-mode:vertical-lr;direction:rtl;height:100px;width:28px"></div>`).join("")}</div>
     <p id="jm-op" style="margin-top:12px;font-size:15px"></p>`;
   const face = x => x >= 2 ? "😀" : x >= 1 ? "🙂" : x > -1 ? "😐" : x > -2 ? "🙁" : "😣";
   const upd = () => {
-    const s = PH.map((_, i) => +$("#jm-" + i, el).value), X = i => 52 + i * 104, Y = x => 110 - x * 30;
+    const s = PH.map((_, i) => +$("#jm-" + i, el).value), X = i => 52 + i * 104, Y = x => 112 - x * 26;
     const d = s.map((x, i) => (i ? "L" : "M") + X(i) + " " + Y(x)).join(" "), lo = s.indexOf(Math.min(...s));
-    $("svg", el).innerHTML = `<line x1="20" y1="110" x2="500" y2="110" stroke="var(--line-2)" stroke-dasharray="4 4"/><text x="20" y="20" font-size="10" fill="var(--muted)">Positive</text><text x="20" y="210" font-size="10" fill="var(--muted)">Negative</text>
+    $("svg", el).innerHTML = `<line x1="20" y1="112" x2="500" y2="112" stroke="var(--line-2)" stroke-dasharray="4 4"/><text x="500" y="106" font-size="9" text-anchor="end" fill="var(--muted)">neutral</text>
       <path d="${d}" fill="none" stroke="var(--red)" stroke-width="3" stroke-linejoin="round"/>${s.map((x, i) => `<circle cx="${X(i)}" cy="${Y(x)}" r="${i === lo ? 9 : 5}" fill="${i === lo ? "var(--red)" : "var(--surface)"}" stroke="var(--red)" stroke-width="2"/><text x="${X(i)}" y="${Y(x) - 14}" font-size="16" text-anchor="middle">${face(x)}</text>`).join("")}
-      ${PH.map((p, i) => `<text x="${X(i)}" y="200" font-size="11" text-anchor="middle" fill="var(--ink)">${p}</text>`).join("")}`;
+      ${PH.map((p, i) => `<text x="${X(i)}" y="212" font-size="11" text-anchor="middle" fill="var(--ink)">${p}</text>`).join("")}`;
     $("#jm-op", el).innerHTML = `<span class="pill bad">Biggest opportunity: ${PH[lo]}</span> This is where the emotion line dips lowest. Start your How Might We questions here.`;
     ctx.set(s);
   };
@@ -358,7 +367,7 @@ LABS.clickable = (el) => {
     {h: `<span style="display:inline-block;padding:10px 16px;border-radius:6px;background:var(--sunken);color:var(--muted)">Disabled</span>`, c: false, w: "A disabled button. It should look inactive, but keep labels readable."},
     {h: `<span style="display:inline-block;padding:10px 16px;border:1.5px solid var(--ink);border-radius:6px;font-weight:600">Add to list</span>`, c: true, w: "An outlined button. Border, shape and padding still read as interactive."}];
   el.innerHTML = `<p class="muted" style="font-size:14px;margin-bottom:12px">Tap each element you believe is interactive.</p>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:10px">${E.map((x, i) => `<button type="button" class="panel ck" data-i="${i}" aria-pressed="false" style="display:grid;place-items:center;min-height:96px;gap:8px;text-align:center">${x.h}<span class="fb" style="font-size:13px;line-height:1.4;color:var(--ink-2)" hidden></span></button>`).join("")}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr));gap:10px">${E.map((x, i) => `<button type="button" class="panel ck" data-i="${i}" aria-pressed="false" style="display:grid;place-items:center;min-height:96px;gap:8px;text-align:center">${x.h}<span class="fb" style="font-size:13px;line-height:1.4;color:var(--ink-2)" hidden></span></button>`).join("")}</div>
     <div class="row" style="margin-top:14px"><button class="btn sm primary" type="button" id="ck-rev">Reveal answers</button><span class="score-line" id="ck-s" aria-live="polite"></span></div>`;
   el.addEventListener("click", e => { const b = e.target.closest(".ck"); if (!b || el.dataset.rev) return; const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", String(on)); b.style.borderColor = on ? "var(--red)" : ""; b.style.boxShadow = on ? "0 0 0 2px var(--red-soft)" : ""; });
   $("#ck-rev", el).onclick = () => { el.dataset.rev = 1; let ok = 0;
@@ -425,7 +434,7 @@ LABS.contrast = (el, ctx) => {
     $("#cc-r", el).textContent = rt.toFixed(2) + ":1";
     Object.assign($("#cc-prev", el).style, {color: f, background: b}); $("#cc-ui", el).style.borderColor = f;
     const C = [["SC 1.4.3 AA · normal text", 4.5], ["SC 1.4.3 AA · large text", 3], ["SC 1.4.6 AAA · normal text", 7], ["SC 1.4.6 AAA · large text", 4.5], ["SC 1.4.11 AA · UI components", 3]];
-    $("#cc-res", el).innerHTML = C.map(([n, m]) => `<div class="row" style="justify-content:space-between;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper)"><span style="font-size:14px">${n} <span class="muted mono">≥ ${m}:1</span></span><span class="pill ${r >= m ? "ok" : "bad"}">${r >= m ? "Pass" : "Fail"}</span></div>`).join("");
+    $("#cc-res", el).innerHTML = C.map(([n, m]) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper)"><span style="font-size:14px;min-width:0">${n} <span class="muted mono" style="white-space:nowrap">≥ ${m}:1</span></span><span class="pill ${r >= m ? "ok" : "bad"}" style="flex:none">${r >= m ? "Pass" : "Fail"}</span></div>`).join("");
     ctx.set({fg: f, bg: b});
   };
   el.addEventListener("input", e => upd(e.target));
@@ -470,7 +479,7 @@ LABS.tokens = (el, ctx) => {
     <div class="field"><label for="tk-a">color.action.primary</label><input type="color" id="tk-a" value="${st.a}"></div>
     <div class="field"><label for="tk-r">radius.control</label><select id="tk-r">${[["0","0 · sharp"],["4","4 · subtle"],["8","8 · soft"],["16","16 · round"],["999","999 · pill"]].map(([v, l]) => `<option value="${v}" ${v === st.r ? "selected" : ""}>${l}</option>`).join("")}</select></div>
     <div class="field"><span class="lbl">space.density</span><div class="seg" role="group" aria-label="Density">${Object.keys(D).map(k => `<button type="button" data-d="${k}" aria-pressed="${k === st.d}">${k}</button>`).join("")}</div></div>
-    <div class="tbl"><table style="min-width:0"><thead><tr><th>Component token</th><th>→ Semantic</th></tr></thead><tbody id="tk-map"></tbody></table></div></div>
+    <div class="tbl"><table style="min-width:0;table-layout:fixed"><thead><tr><th>Component token</th><th>Semantic token</th></tr></thead><tbody id="tk-map"></tbody></table></div></div>
     <div class="panel" id="tk-prev" style="display:grid;gap:var(--s2);align-content:start">
       <b style="font-family:var(--f-display);font-size:18px">Plan this week</b>
       <input type="text" value="Search recipes" aria-label="Preview input" style="border-radius:var(--rad);height:auto;padding:var(--s1) var(--s2)">
@@ -500,7 +509,7 @@ LABS.autolayout = (el, ctx) => {
       <div id="al-f" style="display:flex;background:var(--surface);border:1.5px dashed var(--red);border-radius:8px;outline:var(--pad) solid var(--red-soft);outline-offset:calc(-1 * var(--pad))">
         <div style="background:var(--sunken);border-radius:6px;padding:10px;font-size:13px">Image</div><div style="font-weight:600">Lemon chickpea pasta</div>
         <div id="al-c" style="background:var(--red);color:#fff;border-radius:6px;padding:10px 14px;font-weight:600;font-size:14px;text-align:center">Add to plan</div></div></div>
-      <pre id="al-css" class="panel" style="margin:0;font:12.5px/1.6 var(--f-mono);white-space:pre-wrap;overflow:auto"></pre></div></div>`;
+      <pre id="al-css" class="panel" style="margin:0;font:12.5px/1.6 var(--f-mono);white-space:pre;overflow:auto"></pre></div></div>`;
   const upd = () => { st.gap = +$("#al-gap", el).value; st.pad = +$("#al-pad", el).value;
     const F = $("#al-f", el), C = $("#al-c", el);
     Object.assign(F.style, {flexDirection: st.dir, gap: st.gap + "px", padding: st.pad + "px", alignItems: st.align, width: st.parent === "hug" ? "fit-content" : st.parent === "fixed" ? "320px" : "100%"}); F.style.setProperty("--pad", Math.max(st.pad, 0) + "px");
@@ -520,7 +529,7 @@ LABS.handoff = (el, ctx) => {
     ["Interactions and animations are annotated", "What happens when I tap this card?"], ["Truncation and max lengths are specified", "What if the title is 80 characters?"], ["Responsive behavior shown at key breakpoints", "How does this look on a tablet?"],
     ["Frames are marked Ready for dev", "Which version is final?"], ["Accessibility notes: focus order, labels, alt text", "What should the screen reader say here?"]];
   const st = ctx.get() || [];
-  el.innerHTML = `<div class="lab-grid"><div style="display:grid;gap:4px">${I.map(([t], i) => `<label class="check" style="font-weight:500"><input type="checkbox" data-i="${i}" ${st.includes(i) ? "checked" : ""}> ${t}</label>`).join("")}</div>
+  el.innerHTML = `<div class="lab-grid"><div style="display:grid;gap:4px">${I.map(([t], i) => `<label class="check multi" style="font-weight:500"><input type="checkbox" data-i="${i}" ${st.includes(i) ? "checked" : ""}><span>${t}</span></label>`).join("")}</div>
     <div class="panel" style="display:grid;gap:12px"><div class="lbl">Readiness</div><div class="result" id="ho-p"></div><div class="bar"><i id="ho-b" style="width:0"></i></div><div class="lbl">Questions you'll get in Slack</div><ul id="ho-q" style="margin:0;padding-left:1.1em;display:grid;gap:4px;font-size:14.5px"></ul></div></div>`;
   const upd = () => { const on = $$("input[data-i]", el).filter(x => x.checked).map(x => +x.dataset.i), p = Math.round(on.length / I.length * 100);
     $("#ho-p", el).textContent = p + "%"; $("#ho-b", el).style.width = p + "%"; $("#ho-b", el).style.background = p === 100 ? "var(--ok)" : p >= 60 ? "var(--warn)" : "var(--bad)";
@@ -579,7 +588,7 @@ LABS.targets = (el, ctx) => {
     const C = [["WCAG 2.5.8 Target Size (Minimum) · AA", s >= 24 ? "pass" : spacingOK ? "spacing" : "fail", s >= 24 ? "At least 24 × 24 px." : spacingOK ? "Passes by the spacing exception: 24 px circles don't overlap." : "Under 24 px and too close together."],
       ["WCAG 2.5.5 Target Size (Enhanced) · AAA", s >= 44 ? "pass" : "fail", "Needs 44 × 44 px."], ["Apple HIG · iOS default control size", s >= 44 ? "pass" : s >= 28 ? "min" : "fail", s >= 44 ? "Meets the 44 × 44 pt default." : s >= 28 ? "Above the 28 × 28 pt minimum, below the 44 pt default." : "Below Apple's 28 × 28 pt minimum."],
       ["Android · minimum touch target", s >= 48 ? "pass" : "fail", "Needs at least 48 × 48 dp; larger is better."]];
-    $("#tg-res", el).innerHTML = C.map(([n, r, w]) => `<div class="qcard" style="gap:6px"><div class="row" style="justify-content:space-between"><b style="font-size:14.5px">${n}</b><span class="pill ${r === "pass" ? "ok" : r === "fail" ? "bad" : "warn"}">${r === "pass" ? "Pass" : r === "fail" ? "Fail" : r === "spacing" ? "Pass (spacing)" : "Minimum only"}</span></div><span class="fb">${w}</span></div>`).join("");
+    $("#tg-res", el).innerHTML = C.map(([n, r, w]) => `<div class="qcard" style="gap:6px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><b style="font-size:14.5px;min-width:0">${n}</b><span class="pill ${r === "pass" ? "ok" : r === "fail" ? "bad" : "warn"}" style="flex:none">${r === "pass" ? "Pass" : r === "fail" ? "Fail" : r === "spacing" ? "Pass (spacing)" : "Minimum only"}</span></div><span class="fb">${w}</span></div>`).join("");
     ctx.set({s, g}); };
   el.addEventListener("input", upd); upd();
 };
@@ -610,14 +619,14 @@ LABS.casestudy = (el, ctx) => {
 LABS.planner = (el, ctx) => {
   const M = [["Research: plan, 5 interviews, affinity map", 10], ["Define: problem, HMWs, HEART metric", 4], ["Structure: card sort or tree test, sitemap, flow", 6], ["Design: wireframes → hi-fi with a mini design system", 14], ["Test: prototype, 5-person think-aloud, revise", 8], ["Accessibility audit", 3], ["Case study write-up", 6]];
   const today = new Date().toISOString().slice(0, 10), st = ctx.get() || {d: today, h: 8};
-  el.innerHTML = `<div class="row" style="margin-bottom:16px"><div class="field" style="width:180px"><label for="pl-d">Start date</label><input type="date" id="pl-d" value="${st.d}"></div>
-    <div class="field" style="width:180px"><label for="pl-h">Hours per week</label><select id="pl-h">${[4, 6, 8, 10, 12, 15].map(h => `<option ${h === +st.h ? "selected" : ""}>${h}</option>`).join("")}</select></div><div class="panel" style="padding:10px 14px"><div class="lbl">Finish</div><b id="pl-end" class="mono" style="font-size:16px"></b></div></div>
+  el.innerHTML = `<div class="row" style="margin-bottom:16px;align-items:flex-end"><div class="field" style="width:180px"><label for="pl-d">Start date</label><input type="date" id="pl-d" value="${st.d}"></div>
+    <div class="field" style="width:180px"><label for="pl-h">Hours per week</label><select id="pl-h">${[4, 6, 8, 10, 12, 15].map(h => `<option ${h === +st.h ? "selected" : ""}>${h}</option>`).join("")}</select></div><div class="panel" style="padding:0 14px;height:44px;display:flex;flex-direction:column;justify-content:center;gap:2px"><div class="lbl" style="font-size:10px">Finish</div><b id="pl-end" class="mono" style="font-size:16px"></b></div></div>
     <ol id="pl-l" style="list-style:none;margin:0;padding:0;display:grid;gap:8px"></ol>`;
   const fmt = d => d.toLocaleDateString(undefined, {month: "short", day: "numeric"});
   const upd = () => { const d0 = new Date($("#pl-d", el).value + "T00:00"), h = +$("#pl-h", el).value; if (isNaN(d0)) return; let acc = 0;
     const total = M.reduce((a, m) => a + m[1], 0);
     $("#pl-l", el).innerHTML = M.map(([n, hrs], i) => { const s = new Date(d0.getTime() + acc / h * 7 * 864e5); acc += hrs; const e = new Date(d0.getTime() + acc / h * 7 * 864e5);
-      return `<li style="display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper)"><span class="mono" style="color:var(--red)">${i + 1}</span><span>${n}<div class="bar" style="margin-top:6px;height:6px"><i style="width:${hrs / 14 * 100}%;background:var(--red)"></i></div></span><span class="mono muted" style="font-size:12px;text-align:right">${fmt(s)} – ${fmt(e)}<br>${hrs} h</span></li>`; }).join("");
+      return `<li style="display:grid;grid-template-columns:24px minmax(0,1fr) 112px;gap:12px;align-items:center;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--paper)"><span class="mono" style="color:var(--red)">${i + 1}</span><span>${n}<div class="bar" style="margin-top:6px;height:6px"><i style="width:${hrs / 14 * 100}%;background:var(--red)"></i></div></span><span class="mono muted" style="font-size:12px;text-align:right">${fmt(s)} – ${fmt(e)}<br>${hrs} h</span></li>`; }).join("");
     $("#pl-end", el).textContent = fmt(new Date(d0.getTime() + total / h * 7 * 864e5)) + ` · ${total} h`; ctx.set({d: $("#pl-d", el).value, h}); };
   el.addEventListener("input", upd); el.addEventListener("change", upd); upd();
 };
